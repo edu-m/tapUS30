@@ -2,7 +2,7 @@
 require __DIR__ . '/vendor/autoload.php';
 use PolygonIO\Rest\Rest;
 
-$api_key = 'ZKgbcNT96nxgF4M89inf4xn2zzkWlxCf';
+$api_key = 'WMHNmBNvAx5V3IdOqMzFlytWyDq3jlln';
 $tickers = array(
     "AXP",
     "AMGN",
