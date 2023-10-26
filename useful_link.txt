@@ -1,1 +1,2 @@
 https://www.tutorialspoint.com/how-to-get-docker-containers-to-talk-to-each-other-while-running-on-my-local-host
+https://betterdatascience.com/how-to-install-apache-kafka-using-docker-the-easy-way/
