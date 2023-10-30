@@ -1,0 +1,14 @@
+
+<source>
+  @type tail
+  path /fluentd/etc/formatted/*.json
+  read_from_head true
+  pos_file /fluentd/etc/data.pos
+  tag json.log
+  format json
+  </source>
+
+
+<match json.log>  
+  @type stdout
+</match>

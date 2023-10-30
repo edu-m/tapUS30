@@ -3,21 +3,17 @@ version: '3'
 services:
   zookeeper:
     image: zookeeper
-    container_name: zookeeper
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     ports:
       - "2181:2181"
   kafka:
-    image: kafka_clean
+    image: bitnami/kafka
     container_name: kafka
     ports:
-      - "9092:9092"
+      - "9093:9093"
     environment:
       KAFKA_ADVERTISED_HOST_NAME: localhost
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  zoonavigator:
-    image: elkozmon/zoonavigator
-    container_name: zoonavigator
-    ports:
-      - "9000:9000"
-    environment:
-      HTTP_PORT: 9000
