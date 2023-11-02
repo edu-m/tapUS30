@@ -4,20 +4,51 @@ services:
   zookeeper:
     image: zookeeper_clean
     container_name: zookeeper
+    networks:
+      - tap
     ports:
       - "2181:2181"
-  kafka:
+  k-financial:
     image: kafka_clean
-    container_name: kafka
+    container_name: k-financial
+    networks:
+      - tap
     ports:
       - "9092:9092"
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_ADVERTISED_HOST_NAME: k-financial
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   zoonavigator:
     image: elkozmon/zoonavigator
     container_name: zoonavigator
+    networks:
+      - tap
     ports:
       - "9000:9000"
     environment:
       HTTP_PORT: 9000
+  fluentd:
+    container_name: fluentd
+    networks:
+      - tap
+    user: root
+    build:
+      context: .
+    image: fluentkafka
+    volumes:
+      - ./data/newraw/:/fluentd/log/files/
+      - ./conf:/fluentd/etc/
+      - ./output:/output/
+  producer:
+    container_name: producer
+    networks:
+      - tap
+    user: root
+    image: producer
+    volumes:
+      - ./data/newraw/:/data/raw
+    command: [ php, batch_extract.php ]
+
+networks:
+  tap:
+    driver: bridge
