@@ -18,6 +18,56 @@ services:
     environment:
       KAFKA_ADVERTISED_HOST_NAME: k-financial
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  k-health:
+    image: kafka_clean
+    container_name: k-health
+    networks:
+      - tap
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: k-health
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  k-cgoods:
+    image: kafka_clean
+    container_name: k-cgoods
+    networks:
+      - tap
+    ports:
+      - "9095:9095"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: k-cgoods
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  k-tech:
+    image: kafka_clean
+    container_name: k-tech
+    networks:
+      - tap
+    ports:
+      - "9096:9096"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: k-tech
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  k-industrial:
+   image: kafka_clean
+   container_name: k-industrial
+   networks:
+      - tap
+   ports:
+   - "9097:9097"
+   environment:
+      KAFKA_ADVERTISED_HOST_NAME: k-industrial
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  k-energy:
+    image: kafka_clean
+    container_name: k-energy
+    networks:
+      - tap
+    ports:
+      - "9098:9098"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: k-energy
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   zoonavigator:
     image: elkozmon/zoonavigator
     container_name: zoonavigator
