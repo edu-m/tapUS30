@@ -2,3 +2,4 @@ https://www.tutorialspoint.com/how-to-get-docker-containers-to-talk-to-each-othe
 https://www.baeldung.com/ops/kafka-new-topic-docker-compose
 https://betterdatascience.com/how-to-install-apache-kafka-using-docker-the-easy-way/
 https://github.com/fluent/fluent-plugin-kafka/blob/master/examples/out_kafka2/record_key.conf
+https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html
