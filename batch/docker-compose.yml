@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  producer:
+    container_name: producer_batch
+    networks:
+      - tap
+    user: root
+    image: producer_batch
+    volumes:
+      - ./data/newraw/:/data/raw
+    command: [ php, batch_extract.php ]
+  spark:
+    container_name: spark_process
+    networks:
+      - tap
+    image: spark_process
+    volumes:
+      - ../Spark/:/app
+   
+networks:
+  tap:
+    driver: bridge

@@ -1,10 +1,13 @@
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from pyspark import SparkFiles
+import pandas as pd
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
+import time
 
-KAFKA_BOOTSTRAP_SERVERS = "tap:9092"
+ #time.sleep(3)
+KAFKA_BOOTSTRAP_SERVERS = "172.17.0.1:9092"
 sc = SparkContext(appName="tapUS30")
 spark = SparkSession(sc)
 sc.setLogLevel("WARN")
@@ -26,7 +29,8 @@ data_schema = StructType().add("v", IntegerType()) \
 
 #Extract the values from the dataframe in streaming  
 data_received = dt.selectExpr("CAST(value AS STRING)") \
-     .select(from_json(col("volume"), data_schema).alias("data_received")) \
+     .select(from_json(col("value"), data_schema).alias("data_received")) \
      .select("data_received.*")
 
-print(data_received);
+# print(data_received)
+data_received.writeStream.outputMode("append").format("console").start().awaitTermination()
