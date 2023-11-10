@@ -10,6 +10,76 @@ services:
   #   volumes:
   #     - ./data/newraw/:/data/raw
   #   command: [ php, batch_extract.php ]
+  es_cgoods:
+    container_name: es_cgoods
+    environment:
+      - "xpack.security.enabled=false"
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+      - "discovery.type=single-node"
+    networks:
+      - tap
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  # es_energy:
+  #   container_name: es_energy
+  #   environment:
+  #     - "xpack.security.enabled=false"
+  #     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - "discovery.type=single-node"
+  #   ports:
+  #     - "9201:9200"
+  #     - "9301:9300"
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  # es_financial:
+  #   container_name: es_financial
+  #   environment:
+  #     - "xpack.security.enabled=false"
+  #     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - "discovery.type=single-node"
+  #   ports:
+  #     - "9202:9200"
+  #     - "9302:9300"
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  # es_health:
+  #   container_name: es_health
+  #   environment:
+  #     - "xpack.security.enabled=false"
+  #     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - "discovery.type=single-node"
+  #   ports:
+  #     - "9203:9200"
+  #     - "9303:9300"
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  # es_industrial:
+  #   container_name: es_industrial
+  #   environment:
+  #     - "xpack.security.enabled=false"
+  #     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - "discovery.type=single-node"
+  #   ports:
+  #     - "9204:9200"
+  #     - "9304:9300"
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  # es_tech:
+  #   container_name: es_tech
+  #   environment:
+  #     - "xpack.security.enabled=false"
+  #     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+  #     - "discovery.type=single-node"
+  #   ports:
+  #     - "9205:9200"
+  #     - "9305:9300"
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    networks:
+      - tap
+    ports: 
+      - "5601:5601"
+    environment:
+      - 'ELASTICSEARCH_HOSTS=["http://es_cgoods:9200"]' #,"http://es_energy:9200"],"http://es_financial:9200","http://es_health:9200","http://es_industrial:9200","http://es_tech:9200"]'
   spark:
     container_name: spark_process
     networks:
@@ -19,7 +89,6 @@ services:
       - ./Spark/demo:/demo/model_data
       - ./Spark/app/:/app
       - ./data/newraw/:/data
-   
 networks:
   tap:
     driver: bridge
