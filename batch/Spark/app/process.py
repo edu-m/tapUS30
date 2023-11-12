@@ -45,5 +45,5 @@ es_cgoods = Elasticsearch("http://es_cgoods:9200")
 predictions = predictions.select("close","prediction")
 cgoods_data = predictions.toPandas().to_dict(orient="records")
 for i in range(len(cgoods_data)):
-    es_cgoods.index(index='test', id=i,document=json.dumps(cgoods_data[i]))
+    es_cgoods.index(index='cgoods', id=i,document=json.dumps(cgoods_data[i]))
 # predictions.show()
