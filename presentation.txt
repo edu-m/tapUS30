@@ -1,0 +1,101 @@
+TAP US30
+
+STREAMING
+
+CLIENT PHP 
+
+Il primo passo della pipeline è quello di creare un client che s'interfacci
+con l'API di Polygon e faccia richiesta dei dati, considerando la sola giornata 
+precedente. Quest'ultimo sarà mandato in esecuzione su un container.Di seguito, 
+vediamo come ottenere l'opportuno Dockerfile, da cui potremo creare l'immagine 
+che, nel nostro "docker-compose", chiameremo "producer".
+
+Dockerfile
+
+FROM alpine
+RUN apk update && apk add php composer php-fileinfo
+WORKDIR /app
+COPY batch_extract.php /app
+RUN composer require polygon-io/api -W
+CMD ["php", "batch_extract.php"]
+
+L'immagine base è quella della versione "alpine" di Linux, scelta in quanto
+tra le più "leggere" in termini di spazio sul disco. Il gestore di pacchetti
+si chiama "apk", da cui installiamo le librerie php e composer. La directory "/app" nel
+container è quella in cui copiamo il codice "batch_extract.php", il cui
+contenuto descriveremo in seguito. Eseguiamo il comando "composer" per richiedere
+la libreria da utilizzare nel nostro codice php così da accedere all'API.
+Dopodichè, una volta partito il container, viene eseguto il comando che
+innesca l'esecuzione del suddetto codice.
+
+batch_extract.php
+
+Innanzitutto, salviamo la API key in una opportuna variabile. Creaiamo un array
+associativo con come chiave il nome dell'azienda e come valore il settore in cui
+opera. Dichiariamo poi un oggetto di tipo "Rest" sul quale chiameremo una serie di
+funzioni per prelevare i dati che ci occorrono. Il più importante è il metodo "get"
+che richiede come parametri il nome dell'azienda, un intero, la data di inizio e 
+quella di fine entro cui prelevare le informazioni e l'unità di tempo, che indichiamo
+come il singolo giorno. In un ciclo for avanzato, scorriamo l'array associativo. ogni
+12 secondi, inviamo una richiesta attraverso l'API. Salviamo queste informazioni su una
+variabile che viene passata alla nostra funzione "write_batch", insieme al nome 
+dell'azienda e alla categoria a cui appartiene, aggiungendo poi anche l'array
+associativo stesso.
+
+
+DATA INGESTION
+Innanzitutto, abbiamo utilizzato Fluentd come framework. Esso permette 
+con facilità di accedere a files salvati nel proprio file system e usarli 
+quali source.
+Dockerfile.
+
+FROM fluentd
+USER root
+RUN apk add ruby-dev
+RUN gem install fluent-plugin-kafka --no-doc
+
+Partiamo dall'immagine "vergine" di fluentd, scaricata direttamente dalla
+repository pubblica, per poi installare ruby e gem, quest'ultimo il gestore
+di pacchetti opportuno per installare il plugin che permette lo scambio di
+dati tra fluentd e kafka. L'immagine risultante sarà chiamata "fluentkafka".
+
+fluent.conf
+
+La tappa più importante, dopo aver creato opportunemente il
+Dockerfile e dunque aver avuto a disposizione l'immagine per il container,
+è quella di scrivere correttamente il file di configurazione. 
+Esistono due tag fondamentali che lo caratterizzano, ovvero "<source>" e 
+"<match>", rispettivamente a indicare l'input e l'output della data 
+ingestion. 
+Source.
+L'annotazione "@type tail" si utilizza per indicare che si intenda aprire
+un file. Questi vengono letti, come suggerisce il nome stesso, dall'ultima
+riga alla prima a meno che, come abbiamo fatto, non si setti la variabile
+read_from_head a "true".  
+I files da cui stiamo leggendo, come già spiegato nella sezione CLIENT PHP,
+sono caratterizzati da un json per ogni riga. Dunque, indicheremo "format
+json" affinchè vengano riconosciuti da fluentd come tali.
+Visto che abbiamo scelto di suddividere le aziende in base al settore,
+continuiamo a mantenere questi gruppi specificando una source per ognuno
+di essi. Qualora non li taggassimo opportunemente, non riusciremmo ad 
+utilizzarli in modo specifico all'interno del match. Per cui, per ognuno
+di essi, scriveremo "tag" seguito dal nome del settore.
+Infine, sarà fondamentale indicare il path da cui prelevarli, così come
+un path temporaneo, su "pos_file", che non indicherà altro che la cartella
+temporanea in cui si immagazzineranno i dati prima del loro invio in output.
+Match.
+L'annotazione "@type kafka2" indicherà che l'output verrà reindirizzato a 
+kafka. Ciò è possibile in virtù dell'installazione del plugin che connette
+fluentd a kafka, da Dockerfile. 
+Il suddetto plugin ci permetterà di specificare due unità fondamentali per
+kafka, ovvero i brokers e i topics. Abbiamo scelto, per leggibilità, di 
+chiamare ogni broker come "k-[nomebroker]" e di bindarlo con la porta
+"9092", la quale sarà mappata a una porta effettiva al di fuori del container
+dell'istanza di kafka, che coincide con il broker stesso 
+(si veda il docker_compose). Come nome del topic, avremo lo stesso nome
+del tag specificato in "<source>". Avremo quindi un "<match>" per
+ogni "<source>". Per specificare quali dati in input inoltreremo, il tag
+sarà "<match [nometag]>".
+Risulta necessario specificare anche il tipo di file in output, attraverso il
+tag "@type json" all'interno del tag "<format>", rigorosamente annidato dentro
+il match.
