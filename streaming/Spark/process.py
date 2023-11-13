@@ -1,36 +1,34 @@
 from pyspark import SparkContext
+import json
 from pyspark.sql import SparkSession
 from pyspark import SparkFiles
 import pandas as pd
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
+from pyspark.ml.linalg import Vectors
+from pyspark.ml.feature import VectorAssembler
+from elasticsearch import Elasticsearch
+from pyspark.ml.regression import LinearRegression
+from pyspark.ml.feature import StringIndexer
 import time
 
- #time.sleep(3)
-KAFKA_BOOTSTRAP_SERVERS = "172.17.0.1:9092"
 sc = SparkContext(appName="tapUS30")
 spark = SparkSession(sc)
 sc.setLogLevel("WARN")
 
-dt = spark \
-     .readStream \
-     .format("kafka") \
-     .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVERS) \
-     .option("subscribe", "financial").option("startingOffsets", "earliest") \
-     .load()
+names=["cgoods","financial","energy","health","industrial","tech"]
+indexes=[Elasticsearch("http://es_cgoods:9200"),Elasticsearch("http://es_financial:9200"),Elasticsearch("http://es_energy:9200"),Elasticsearch("http://es_health:9200"),Elasticsearch("http://es_industrial:9200"),Elasticsearch("http://es_tech:9200")]
+models=[]
 
-#Schema for the dataframe 
-data_schema = StructType().add("v", IntegerType()) \
-     .add("vw", FloatType()).add("o", FloatType()).add("c", FloatType()) \
-     .add("h", FloatType()).add("l", FloatType()).add("t", IntegerType()) \
-     .add("n", IntegerType()).add("tickerSymbol", StringType())\
-     .add("volume",IntegerType()).add("open", FloatType()).add("close", FloatType()).add("high", FloatType())\
-     .add("low", FloatType()).add("timestamp", IntegerType()).add("numberOfItems", IntegerType())
+for name in names:
+    df = spark.read.json("/data/"+name)
+    output = assembler.transform(df).select('features','close','tickerSymbol')
+    lr = LinearRegression.load("/models/"+name)
+    trained_model = lr.fit(output)
+    predictions = trained_model.transform(output)
+    predictions = predictions.select("close","prediction")
+    models.append(predictions.toPandas().to_dict(orient="records"))
 
-#Extract the values from the dataframe in streaming  
-data_received = dt.selectExpr("CAST(value AS STRING)") \
-     .select(from_json(col("value"), data_schema).alias("data_received")) \
-     .select("data_received.*")
-
-# print(data_received)
-data_received.writeStream.outputMode("append").format("console").start().awaitTermination()
+for i in range(len(indexes)):
+    for j in range(len(models[i])):
+        indexes[i].index(index=names[i], id=j,document=json.dumps(models[i][j]))

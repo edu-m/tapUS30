@@ -38,17 +38,20 @@ $tickers = array(
 
 $currentDate = new DateTime();
 $startingDate = new DateTime();
-$interval = new DateInterval('P2Y1D');
+$interval = new DateInterval('P1D');
 $startingDate->sub($interval);
 
 $rest = new Rest($api_key);
 
-function write_sequential($data_array, $ticker, $category, $tickers)
+function write_batch($data_array, $ticker, $category, $tickers)
 {
-    $file = fopen("/data/raw/$category/$ticker.txt", "w") or die("Unable to open file !");
+    $path = "/data/raw/$category";
+    $filename = "$ticker.txt";
+    if (!file_exists($path))
+        mkdir($path);
+    $file = fopen($path . "/" . $filename, "w") or die("Unable to open file !");
     $results = $data_array["results"];
     foreach ($results as $result) {
-        usleep(500000);
         $result["tickerSymbol"] = $ticker;
         fwrite($file, json_encode($result) . "\n");
     }
@@ -56,6 +59,7 @@ function write_sequential($data_array, $ticker, $category, $tickers)
 }
 
 foreach ($tickers as $ticker => $category) {
+    sleep(12);
     $data = $rest->stocks->aggregates->get(
         $ticker,
         1,
@@ -63,5 +67,5 @@ foreach ($tickers as $ticker => $category) {
         $currentDate->format('Y-m-d'),
         'day'
     );
-    write_sequential($data, $ticker, $category, $tickers);
+    write_batch($data, $ticker, $category, $tickers);
 }

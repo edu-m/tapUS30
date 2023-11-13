@@ -37,7 +37,8 @@ services:
       - "cluster.initial_master_nodes=es_cgoods,es_energy,es_financial,es_health,es_industrial,es_tech"
       - "xpack.security.enabled=false"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-
+    networks:
+      - tap
     ports:
       - "9201:9200"
       - "9301:9300"
@@ -52,7 +53,8 @@ services:
       - "cluster.initial_master_nodes=es_cgoods,es_energy,es_financial,es_health,es_industrial,es_tech"
       - "xpack.security.enabled=false"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-
+    networks:
+      - tap
     ports:
       - "9202:9200"
       - "9302:9300"
@@ -67,7 +69,8 @@ services:
       - "cluster.initial_master_nodes=es_cgoods,es_energy,es_financial,es_health,es_industrial,es_tech"
       - "xpack.security.enabled=false"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-
+    networks:
+      - tap
     ports:
       - "9203:9200"
       - "9303:9300"
@@ -82,7 +85,8 @@ services:
       - "cluster.initial_master_nodes=es_cgoods,es_energy,es_financial,es_health,es_industrial,es_tech"
       - "xpack.security.enabled=false"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-
+    networks:
+      - tap
     ports:
       - "9204:9200"
       - "9304:9300"
@@ -97,7 +101,8 @@ services:
       - "cluster.initial_master_nodes=es_cgoods,es_energy,es_financial,es_health,es_industrial,es_tech"
       - "xpack.security.enabled=false"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-
+    networks:
+      - tap
     ports:
       - "9205:9200"
       - "9305:9300"
@@ -109,7 +114,7 @@ services:
     ports: 
       - "5601:5601"
     environment:
-      - 'ELASTICSEARCH_HOSTS=["http://es_cgoods:9200","http://es_energy:9200","http://es_financial:9200","http://es_health:9200","http://es_industrial:9200","http://es_tech:9200",]'
+      - 'ELASTICSEARCH_HOSTS=["http://es_cgoods:9200","http://es_energy:9200","http://es_financial:9200","http://es_health:9200","http://es_industrial:9200","http://es_tech:9200"]'
   spark:
     container_name: spark_process
     networks:
@@ -119,6 +124,7 @@ services:
       - ./Spark/demo:/demo/model_data
       - ./Spark/app/:/app
       - ./data/newraw/:/data
+      - ../models:/models
 networks:
   tap:
     driver: bridge

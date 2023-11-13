@@ -38,7 +38,7 @@ $tickers = array(
 
 $currentDate = new DateTime();
 $startingDate = new DateTime();
-$interval = new DateInterval('P2Y1D');
+$interval = new DateInterval('P2Y2D');
 $startingDate->sub($interval);
 
 $rest = new Rest($api_key);
