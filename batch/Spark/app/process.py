@@ -12,7 +12,7 @@ from pyspark.ml.feature import VectorAssembler
 from elasticsearch import Elasticsearch
 from pyspark.ml.regression import LinearRegression
 from pyspark.ml.feature import StringIndexer
-from datetime import datetime
+import datetime
 from pyspark.sql import Window
 from pyspark.sql import functions as F
 
@@ -22,46 +22,78 @@ sc.setLogLevel("WARN")
 
 names=["cgoods","financial","energy","health","industrial","tech"]
 indexes=[Elasticsearch("http://es_cgoods:9200"),Elasticsearch("http://es_financial:9200"),Elasticsearch("http://es_energy:9200"),Elasticsearch("http://es_health:9200"),Elasticsearch("http://es_industrial:9200"),Elasticsearch("http://es_tech:9200")]
-models=[]
+prediction_models=[]
+historical_models=[]
 day_in_ms = 86400000
 
-def recursive_predict(iters, trained_model, df, predictions=None):
-    if iters == 0:
-        return predictions
-    max_t = int(output.select(F.max("timestamp")).first()[0])
+def format_data(dataframe, close_name):
+    return dataframe.groupBy("timestamp").avg(close_name).sort("timestamp").withColumn("timestamp",predictions.timestamp / 1000).withColumn("timestamp", col("timestamp").cast(TimestampType())).\
+    withColumn("timestamp",date_format(col("timestamp"),"yyyy-MM-dd")).withColumn("avg("+close_name+")",round(col("avg("+close_name+")"),2))
+    
+
+def epoch_to_weekday(epoch_time):
+    # Convert epoch time to a datetime object
+    dt_object = datetime.datetime.fromtimestamp(epoch_time)
+    # Get the weekday as an integer (Monday is 0 and Sunday is 6)
+    weekday_number = dt_object.weekday()
+    return weekday_number
+
+def recursive_prediction(dataframe, model, prediction=None, nIter=7):
+    # specifica per la vista con ordinamento su timestamp per ciascun tickerSymbol
+    max_t = int(dataframe.select(F.max("timestamp")).first()[0])
+    curr_weekday = epoch_to_weekday((max_t+day_in_ms)/1000)
+    day_offset = day_in_ms
+    if curr_weekday > 4:
+        day_offset = day_offset*(8-curr_weekday)
+    # print(curr_weekday)
     window_spec = Window.partitionBy("tickerSymbol").orderBy(col("timestamp").desc())
-    print(df)
-    df_with_row_number = df.withColumn("row_num", row_number().over(window_spec))
-    # Filter the rows where the row number is less than or equal to 7
-    result_df = df_with_row_number.filter(col("row_num") <= 7)  
+    df_with_row_number = dataframe.withColumn("row_num", row_number().over(window_spec)).select("tickerSymbol","open","high","low","timestamp"\
+        ,"close")
+    result_df = df_with_row_number.filter(col("row_num") < 7)  
     result_df = result_df.drop("row_num")
-    result_df = result_df.groupBy("tickerSymbol").agg(F.avg("open").alias("avg(open)"),\
-        F.avg("high").alias("avg(high)"),F.avg("low").alias("avg(low)"),F.avg("timestamp"))
-    assembler = VectorAssembler(inputCols=['avg(open)','avg(high)','avg(low)'],outputCol='features')
-    result_df = assembler.transform(result_df).select("features","tickerSymbol")
-    predictions = trained_model.transform(result_df)
-    return recursive_predict(iters-1,trained_model,result_df,predictions)
+    temp_df = result_df.groupBy("tickerSymbol").agg(F.avg("open").alias("open"),F.avg("high").alias("high"),\
+        F.avg("low").alias("low"),F.any_value("timestamp").alias("timestamp"),F.avg("close").alias("close"))
+    assembler = VectorAssembler(inputCols=['open','high','low'],outputCol='features')
+    temp_df = assembler.transform(temp_df)
+    if(prediction != None):
+        print(max_t)
+        # print("**************************************")
+        # temp_df.show()
+        # print("**************************************")
+        # prediction.show()
+        # print("**************************************")
+        # print(result_df)
+        # print("**************************************")
+        # print(prediction)
+        prediction = prediction.withColumn("timestamp",lit(max_t+day_offset))
+        result_df = result_df.union(prediction.withColumnRenamed("prediction","close").select("tickerSymbol","open","high","low","timestamp"\
+        ,"close")).distinct()
+        nIter = nIter - 1
+    prediction = trained_model.transform(temp_df).select("tickerSymbol","open","high","low","timestamp","prediction","features")
+    if nIter == 0 and result_df is not None:
+        # print(result_df)
+        return result_df
+    else:
+        return recursive_prediction(dataframe=result_df,model=trained_model,prediction=prediction,nIter=nIter)
+
 
 for name in names:
     df = spark.read.json("/data/"+name)
     assembler = VectorAssembler(inputCols=['open','high','low'],outputCol='features')
-    output = assembler.transform(df).select('features','close','open','high','low','tickerSymbol','timestamp')
+    output = assembler.transform(df).select('features','close','tickerSymbol','timestamp')
     
     lr = LinearRegression (featuresCol='features',labelCol='close',maxIter=10,regParam=0.3,elasticNetParam=0.8)
     trained_model = lr.fit(output)
-    predictions = recursive_predict(7,trained_model,output)
-    all_columns = output.columns + predictions.columns
-    merged_df = output.join(predictions, on=["tickerSymbol","features"],how="full")
-    merged_df = merged_df.fillna({"timestamp": max_t+day_in_ms})
-    merged_df = merged_df.fillna({"close": 0})
-    merged_df = merged_df.fillna({"prediction": 0})
-    merged_df.filter(col("prediction").isNotNull()).show()
+    predictions = recursive_prediction(df, trained_model)
+    
     lr.write().overwrite().save("/models/"+name)
-    formatted_data = merged_df.groupBy("timestamp").avg("close","prediction").sort("timestamp").withColumn("timestamp",merged_df.timestamp / 1000).withColumn("timestamp", col("timestamp").cast(TimestampType())).\
-    withColumn("timestamp",date_format(col("timestamp"),"yyyy-MM-dd")).withColumn("avg(close)",round(col("avg(close)"),2))
-    models.append(formatted_data.toPandas().to_dict(orient="records"))
+    historical_models.append(format_data(output,"close").toPandas().to_dict(orient="records"))
+    prediction_models.append(format_data(predictions.withColumnRenamed("close","prediction"),"prediction").toPandas().to_dict(orient="records"))
 
 for i in range(len(indexes)):
     print(i)
-    for j in range(len(models[i])):
-        indexes[i].index(index=names[i], id=j,document=json.dumps(models[i][j]))
+    for j in range(len(prediction_models[i])):
+        indexes[i].index(index=names[i]+"_prediction", id=j,document=json.dumps(prediction_models[i][j]))
+    for k in range(len(historical_models[i])):
+        indexes[i].index(index=names[i]+"_historical", id=k,document=json.dumps(historical_models[i][k]))
+
