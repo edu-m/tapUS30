@@ -16,16 +16,19 @@ import datetime
 from pyspark.sql import Window
 from pyspark.sql import functions as F
 
-sc = SparkContext(appName="tapUS30")
-spark = SparkSession(sc)
+# sc = SparkContext(appName="tapUS30")
+spark = SparkSession.builder.master('local[*]').config("spark.driver.memory","15g")\
+    .appName("tapus30").getOrCreate()
+# spark = SparkSession(sc)
+sc = spark.sparkContext
 sc.setLogLevel("WARN")
 
-names=["cgoods","financial","energy","health","industrial","tech"]
-indexes=[Elasticsearch("http://es_cgoods:9200"),Elasticsearch("http://es_financial:9200"),Elasticsearch("http://es_energy:9200"),Elasticsearch("http://es_health:9200"),Elasticsearch("http://es_industrial:9200"),Elasticsearch("http://es_tech:9200")]
+names=["cgoods"] # ,"financial","energy","health","industrial","tech"]
+indexes=[Elasticsearch("http://es_cgoods:9200")] #,Elasticsearch("http://es_financial:9200"),Elasticsearch("http://es_energy:9200"),Elasticsearch("http://es_health:9200"),Elasticsearch("http://es_industrial:9200"),Elasticsearch("http://es_tech:9200")]
 prediction_data=[]
 historical_data=[]
 day_in_ms = 86400000
-window_size = 10
+window_size = 12
 
 # Format data to conform dataframe to es timestamp & column names
 """
@@ -69,7 +72,7 @@ def recursive_prediction(dataframe, model, prediction=None, nIter=window_size):
     temp_df = assembler.transform(temp_df)
 
     if(prediction != None):
-        print("Completion "+str(((window_size-nIter+1)/window_size)*100)+"%")
+        print("Completion "+str(int(((window_size-nIter+1)/window_size)*100))+"%")
         prediction = prediction.withColumn("timestamp",lit(max_t+day_offset))
         result_df = result_df.union(prediction.withColumnRenamed("prediction","close").select("tickerSymbol","open","high","low","timestamp"\
         ,"close")).distinct()
