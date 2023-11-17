@@ -125,6 +125,7 @@ services:
       - ./Spark/app/:/app
       - ./data/newraw/:/data
       - ../models:/models
+      - ../streaming/Spark/indexes:/indexes
 networks:
   tap:
     driver: bridge
