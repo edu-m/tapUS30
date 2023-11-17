@@ -23,8 +23,8 @@ spark = SparkSession.builder.master('local[*]').config("spark.driver.memory","15
 sc = spark.sparkContext
 sc.setLogLevel("WARN")
 
-names=["cgoods"] # ,"financial","energy","health","industrial","tech"]
-indexes=[Elasticsearch("http://es_cgoods:9200")] #,Elasticsearch("http://es_financial:9200"),Elasticsearch("http://es_energy:9200"),Elasticsearch("http://es_health:9200"),Elasticsearch("http://es_industrial:9200"),Elasticsearch("http://es_tech:9200")]
+names=["cgoods","financial","energy","health","industrial","tech"]
+indexes=[Elasticsearch("http://es_cgoods:9200"),Elasticsearch("http://es_financial:9200"),Elasticsearch("http://es_energy:9200"),Elasticsearch("http://es_health:9200"),Elasticsearch("http://es_industrial:9200"),Elasticsearch("http://es_tech:9200")]
 prediction_data=[]
 historical_data=[]
 day_in_ms = 86400000
