@@ -109,5 +109,5 @@ for name in names:
 # to make it available to the streaming process
 for i in range(len(indexes)):
     print("sending index "+names[i]+" to elasticsearch...")
-    save_and_send_data("prediction",prediction_data,names[i])
-    save_and_send_data("historical",historical_data,names[i],index[i])
+    save_and_send_data("prediction",prediction_data,names[i],indexes[i])
+    save_and_send_data("historical",historical_data,names[i],indexes[i])
