@@ -9,6 +9,7 @@ services:
   #   image: producer_batch
   #   volumes:
   #     - ./data/newraw/:/data/raw
+  #     - ./L1/app:/app
   #   command: [ php, batch_extract.php ]
   es_cgoods:
     container_name: es_cgoods

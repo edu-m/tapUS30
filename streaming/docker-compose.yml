@@ -107,14 +107,17 @@ services:
     image: producer
     volumes:
       - ./kafka/data/newraw/:/data/raw
-    command: [ php, batch_extract.php ]
+      - ./L1/app:/app
+    command: [ php, streaming_extract.php ]
   spark:
     container_name: spark_process
     networks:
       - tap
-    image: spark_process
+    image: spark_withkafka
     volumes:
-      - ./Spark/:/app
+      - ./Spark/app:/app
+      - ../models:/models
+      - ./indexes:/indexes
    
 networks:
   tap:

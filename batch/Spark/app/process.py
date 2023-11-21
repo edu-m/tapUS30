@@ -28,7 +28,7 @@ indexes=[Elasticsearch("http://es_cgoods:9200"),Elasticsearch("http://es_financi
 prediction_data=[]
 historical_data=[]
 day_in_ms = 86400000
-window_size = 12
+window_size = 10
 
 # Format data to conform dataframe to es timestamp & column names
 """
