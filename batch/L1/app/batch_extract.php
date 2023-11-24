@@ -38,9 +38,9 @@ $tickers = array(
 
 $currentDate = new DateTime();
 $startingDate = new DateTime();
-$interval = new DateInterval('P2Y2D');
+$interval = new DateInterval('P5Y');
 $startingDate->sub($interval);
-$interval = new DateInterval('P4D');
+$interval = new DateInterval('P1D');
 $currentDate->sub($interval);
 
 $rest = new Rest($api_key);
@@ -61,7 +61,7 @@ function write_batch($data_array, $ticker, $category, $tickers)
 }
 
 foreach ($tickers as $ticker => $category) {
-    sleep(12);
+    sleep(1);
     $data = $rest->stocks->aggregates->get(
         $ticker,
         1,

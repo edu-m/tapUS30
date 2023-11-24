@@ -1,16 +1,17 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
+use PhpKafka\PhpKafkaAdmin;
 use PolygonIO\Rest\Rest;
 
 $api_key = 'WMHNmBNvAx5V3IdOqMzFlytWyDq3jlln';
 $tickers = array(
+    "CVX" => "energy",
     "AXP" => "financial",
     "AMGN" => "health",
     "AAPL" => "tech",
     "BA" => "industrial",
     "CAT" => "industrial",
     "CSCO" => "tech",
-    "CVX" => "energy",
     "GS" => "financial",
     "HD" => "cgoods",
     "HON" => "tech",
@@ -38,7 +39,7 @@ $tickers = array(
 
 $currentDate = new DateTime();
 $startingDate = new DateTime();
-$interval = new DateInterval('P3D');
+$interval = new DateInterval('P2D');
 $startingDate->sub($interval);
 
 $rest = new Rest($api_key);
@@ -59,17 +60,18 @@ function write_batch($data_array, $ticker, $category, $tickers)
     fclose($file);
 }
 
-foreach ($tickers as $ticker => $category) {
-   
-    
-    $data = $rest->stocks->aggregates->get(
-        $ticker,
-        1,
-        $startingDate->format('Y-m-d'),
-        $currentDate->format('Y-m-d'),
-        'hour'
-    );
-    sleep(12-($data["count"])*0.25);
-    var_dump($data);
-    write_batch($data, $ticker, $category, $tickers);
+while (true) {
+    foreach ($tickers as $ticker => $category) {
+        $data = $rest->stocks->aggregates->get(
+            $ticker,
+            15,
+            $startingDate->format('Y-m-d'),
+            $currentDate->format('Y-m-d'),
+            'minute'
+        );
+        sleep(1);
+        // var_dump($data);
+        write_batch($data, $ticker, $category, $tickers);
+    }
+    sleep(60*15);
 }
