@@ -2,11 +2,14 @@ version: '3'
 
 services:
   producer:
+    build:
+      context: ./L1/
+      dockerfile: Dockerfile
     container_name: producer_batch
     networks:
       - tap
     user: root
-    image: producer_batch
+    image: producer
     volumes:
       - ./data/newraw/:/data/raw
       - ./L1/app:/app
@@ -17,8 +20,8 @@ services:
       - "node.name=es_cgoods"
       #- "bootstrap.memory_lock=true"
       - "cluster.name=es-cluster"
-      - "discovery.seed_hosts=es_cgoods" #,es_energy,es_financial,es_health,es_industrial,es_tech"
-      - "cluster.initial_master_nodes=es_cgoods" #,es_energy,es_financial,es_health,es_industrial,es_tech"
+      - "discovery.seed_hosts=es_cgoods,es_energy,es_financial,es_health,es_industrial,es_tech"
+      - "cluster.initial_master_nodes=es_cgoods,es_energy,es_financial,es_health,es_industrial,es_tech"
       - "xpack.security.enabled=false"
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
 
@@ -117,6 +120,9 @@ services:
     environment:
       - 'ELASTICSEARCH_HOSTS=["http://es_cgoods:9200","http://es_energy:9200","http://es_financial:9200","http://es_health:9200","http://es_industrial:9200","http://es_tech:9200"]'
   spark:
+    build:
+      context: ./Spark/
+      dockerfile: Dockerfile
     container_name: spark_process
     networks:
       - tap
