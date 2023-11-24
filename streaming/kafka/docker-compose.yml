@@ -16,7 +16,17 @@ services:
     ports:
       - "9091:9092"
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: k-financial
+      KAFKA_ADVERTISED_HOST_NAME: k-init
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  k-tech:
+    image: kafka_clean
+    container_name: k-tech
+    networks:
+      - tap
+    ports:
+      - "9095:9092"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: k-tech
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   k-financial:
     image: kafka_clean
@@ -47,16 +57,6 @@ services:
       - "9094:9092"
     environment:
       KAFKA_ADVERTISED_HOST_NAME: k-cgoods
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-  k-tech:
-    image: kafka_clean
-    container_name: k-tech
-    networks:
-      - tap
-    ports:
-      - "9095:9092"
-    environment:
-      KAFKA_ADVERTISED_HOST_NAME: k-tech
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   k-industrial:
     image: kafka_clean
