@@ -2,6 +2,9 @@ version: '3'
 
 services:
   zookeeper:
+    build:
+      context: ./kafka/zookeeper_build
+      dockerfile: Dockerfile
     image: zookeeper_clean
     container_name: zookeeper
     networks:
@@ -9,6 +12,9 @@ services:
     ports:
       - "2181:2181"
   k-init:
+    build:
+      context: ./kafka/kafka_init/
+      dockerfile: Dockerfile
     image: kafka_init
     container_name: k-init
     networks:
@@ -19,6 +25,9 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: k-financial
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   k-financial:
+    build:
+      context: ./kafka/kafka_build
+      dockerfile: Dockerfile
     image: kafka_clean
     container_name: k-financial
     networks:
@@ -29,6 +38,9 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: k-financial
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   k-health:
+    build:
+      context: ./kafka/kafka_build
+      dockerfile: Dockerfile
     image: kafka_clean
     container_name: k-health
     networks:
@@ -39,6 +51,9 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: k-health
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   k-cgoods:
+    build:
+      context: ./kafka/kafka_build
+      dockerfile: Dockerfile
     image: kafka_clean
     container_name: k-cgoods
     networks:
@@ -49,6 +64,9 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: k-cgoods
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   k-tech:
+    build:
+      context: ./kafka/kafka_build
+      dockerfile: Dockerfile
     image: kafka_clean
     container_name: k-tech
     networks:
@@ -59,6 +77,9 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: k-tech
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   k-industrial:
+    build:
+      context: ./kafka/kafka_build
+      dockerfile: Dockerfile
     image: kafka_clean
     container_name: k-industrial
     networks:
@@ -69,6 +90,9 @@ services:
       KAFKA_ADVERTISED_HOST_NAME: k-industrial
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
   k-energy:
+    build:
+      context: ./kafka/kafka_build
+      dockerfile: Dockerfile
     image: kafka_clean
     container_name: k-energy
     networks:
@@ -88,12 +112,13 @@ services:
     environment:
       HTTP_PORT: 9000
   fluentd:
+    build:
+      context: ./Fluentd/
+      dockerfile: Dockerfile
     container_name: fluentd
     networks:
       - tap
     user: root
-    build:
-      context: .
     image: fluentkafka
     volumes:
       - ./kafka/data/newraw/:/fluentd/log/files/
@@ -110,6 +135,9 @@ services:
       - ./L1/app:/app
     command: [ php, streaming_extract.php ]
   spark:
+    build:
+      context: ./Spark/
+      dockerfile: Dockerfile
     container_name: spark_process
     networks:
       - tap
