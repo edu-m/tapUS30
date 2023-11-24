@@ -122,7 +122,7 @@ services:
     image: fluentkafka
     volumes:
       - ./kafka/data/newraw/:/fluentd/log/files/
-      - ./kafka/conf:/fluentd/etc/
+      - ./Fluentd/conf:/fluentd/etc/
       - ./kafka/output:/output/
   producer:
     build:
