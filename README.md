@@ -1,20 +1,22 @@
 # tapUS30
 Progetto di Technologies for Advanced Programming
 
+La documentazione completa è fornita tramite notebok jupyter.
+
 # Progetto
-Il progetto ha come scopo l'acquisizione di dati tramite API Rest di dati finanziari (aziende costituenti l'indice industriale americano "Dow Jones", anche conosciuto come "US30 Industrial Index") , che, dopo un'analisi saranno visualizzati assieme alle relative previsioni
+Il progetto ha come scopo l'acquisizione di dati tramite Rest API (Acquisizione Dati tramite API Polygon.io) di dati finanziari delle aziende costituenti l'indice industriale americano "US30 Industrial Index", anche conosciuto come "Dow Jones". Tali dati, dopo una analisi (Data Processing + ML) saranno visualizzati assieme alle relative previsioni. Si intende dunque creare un sistema autosufficiente di consumo di dati bifase, la cui iniziale procedura batch compone i dati storici e di previsione in dei file appositi con ciascuna riga rappresentante l'andamento giornaliero per ciascuna azienda, letti successivamente per la visualizzazione. La fase successiva costituisce la procedura streaming, che si occuperà di richiedere i dati recenti e relativi al giorno corrente con una granularità di 15 minuti, da visualizzare in tempo reale e sovrapposti sui dati storici e di previsione.
 
 # Funzionamento
-Il progetto si compone di sei parti comunicanti e concatenate, dalla Data Ingestion alla Data Visualization passando per il Data Processing tramite Machine Learning
+Il progetto si compone di diverse parti comunicanti e concatenate, dalla Data Ingestion alla Data Visualization passando per il Data Processing tramite Machine Learning
 In particolare, il progetto presenta un modello duale batch-streaming, l'uno propedeutico all'altro; le componenti sono:
 - Batch
-  - Client PHP (Acquisizione Dati tramite API Polygon.io)
-  - Ingestion tramite Fluentd
-  - Smistamento tramite Kafka
-  - Data Processing con Spark MLIB
-  - Filtraggio con ElasticSearch
-  - Visualizzazione tramite Kibana
+  - Client PHP Batch 
+  - Data Processing con Spark MLLIB
+  - Visualizzazione tramite Elasticsearch/Kibana
  
-- Streaming (todo)
-
-La documentazione è fornita tramite notebok jupyter.
+- Streaming
+  - Client PHP Streaming
+  - Data Ingestion tramite Fluentd
+  - Smistamento tramite Kafka
+  - Data Processing con Spark + Kafka Integration, Structured Streaming, MLLIB 
+  - Visualizzazione tramite Elasticsearch/Kibana
