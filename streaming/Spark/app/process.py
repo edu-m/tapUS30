@@ -18,8 +18,7 @@ from pyspark.sql import functions as F
 import threading
 import time
 
-spark = SparkSession.builder.master('local[*]').config("spark.driver.memory","15g")\
-    .appName("tapus30").getOrCreate()
+spark = SparkSession.builder.appName("tapus30").getOrCreate()
 sc = spark.sparkContext
 sc.setLogLevel("ERROR")
 indexes=[Elasticsearch("http://es_cgoods:9200"),Elasticsearch("http://es_financial:9200"),Elasticsearch("http://es_energy:9200"),Elasticsearch("http://es_health:9200"),Elasticsearch("http://es_industrial:9200"),Elasticsearch("http://es_tech:9200")]
