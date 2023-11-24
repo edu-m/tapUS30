@@ -40,8 +40,6 @@ $currentDate = new DateTime();
 $startingDate = new DateTime();
 $interval = new DateInterval('P5Y');
 $startingDate->sub($interval);
-$interval = new DateInterval('P1D');
-$currentDate->sub($interval);
 
 $rest = new Rest($api_key);
 
