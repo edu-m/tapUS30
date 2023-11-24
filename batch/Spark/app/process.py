@@ -17,9 +17,7 @@ from pyspark.sql import Window
 from pyspark.sql import functions as F
 
 # sc = SparkContext(appName="tapUS30")
-spark = SparkSession.builder.master('local[*]').config("spark.driver.memory","15g")\
-    .appName("tapus30").getOrCreate()
-# spark = SparkSession(sc)
+spark = SparkSession.builder.appName("tapus30").getOrCreate()
 sc = spark.sparkContext
 sc.setLogLevel("WARN")
 
