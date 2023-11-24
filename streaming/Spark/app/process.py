@@ -18,10 +18,8 @@ from pyspark.sql import functions as F
 import threading
 import time
 
-# sc = SparkContext(appName="tapUS30")
 spark = SparkSession.builder.master('local[*]').config("spark.driver.memory","15g")\
     .appName("tapus30").getOrCreate()
-# # spark = SparkSession(sc)
 sc = spark.sparkContext
 sc.setLogLevel("ERROR")
 indexes=[Elasticsearch("http://es_cgoods:9200"),Elasticsearch("http://es_financial:9200"),Elasticsearch("http://es_energy:9200"),Elasticsearch("http://es_health:9200"),Elasticsearch("http://es_industrial:9200"),Elasticsearch("http://es_tech:9200")]
@@ -119,7 +117,7 @@ for thread in threads:
 
 historical_data = []
 
-time.sleep(10) # Diamo tempo ai container di avviarsi
+time.sleep(15) # Diamo tempo ai container di avviarsi
 
 load_indexes()
 
@@ -135,4 +133,3 @@ while(True):
             temp_sdf.show()
             historical_data.append(temp_sdf.toPandas().to_dict(orient="records"))
             save_and_send_data(historical_data,names[i],indexes[i])
-        # averages[i].awaitTermination()

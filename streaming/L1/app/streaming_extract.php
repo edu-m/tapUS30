@@ -58,7 +58,7 @@ function write_batch($data_array, $ticker, $category, $tickers)
     }
     fclose($file);
 }
-
+sleep(15);
 while (true) {
     foreach ($tickers as $ticker => $category) {
         $data = $rest->stocks->aggregates->get(
